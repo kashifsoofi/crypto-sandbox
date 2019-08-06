@@ -5,9 +5,9 @@ namespace Sandbox.Crypto.Tests
 {
     public class AesCryptoTest
     {
-        private readonly string _key = "56625DFA-A5DD-49F8-B640-75070C94D8BC";
+        private readonly string _key = "ibZ7u4TZ7/NAI+8AvMeo46Y9Hzfnxraw0LfeKb9T6WU=";
         private readonly string _plainText = "Here is some data to encrypt!";
-        private readonly string _cipherText = "";
+        private readonly string _cipherText = "EIZC8KgE3IHcRjPU2KtYmegYcaE5AqUwF4MBzMMMA3wHkHqAFYpiTTKGQ4QOUKFmGg==";
 
         [Fact]
         public void Encrypt_should_encrypt_plainText()
@@ -18,6 +18,11 @@ namespace Sandbox.Crypto.Tests
 
             encrypted.Should().NotBeNullOrWhiteSpace();
             encrypted.Should().NotBe(_plainText);
+
+            var decrypted = aesCrypto.Decrypt(encrypted, _key);
+
+            decrypted.Should().NotBeNullOrWhiteSpace();
+            decrypted.Should().Be(_plainText);
         }
 
         [Fact]

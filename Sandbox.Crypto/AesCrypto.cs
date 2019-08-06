@@ -1,24 +1,29 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace Sandbox.Crypto
 {
     public class AesCrypto
     {
+        public string GenerateKey()
+        {
+            using (var aes = Aes.Create())
+            {
+                return Convert.ToBase64String(aes.Key);
+            }
+        }
 
         public string Encrypt(string plainText, string key)
         {
-            var keyBytes = Encoding.UTF8.GetBytes(key);
+            var keyBytes = Convert.FromBase64String(key);
             using (var aes = Aes.Create())
             {
                 aes.Key = keyBytes;
 
                 var cryptoTransform = aes.CreateEncryptor(aes.Key, aes.IV);
 
-                var plainTextAsBytes = Encoding.UTF8.GetBytes(plainText);
-                var cipherText = Encrypt(plainTextAsBytes, cryptoTransform);
+                var cipherText = Encrypt(plainText, cryptoTransform);
 
                 var data = new byte[cipherText.Length + aes.IV.Length + 1];
                 data[0] = (byte) aes.IV.Length;
@@ -37,18 +42,18 @@ namespace Sandbox.Crypto
             var encrypted = new byte[data.Length - ivSize - 1];
             Array.Copy(data, ivSize + 1, encrypted, 0, encrypted.Length);
 
-            var keyBytes = Encoding.UTF8.GetBytes(key);
+            var keyBytes = Convert.FromBase64String(key);
             using (var aes = Aes.Create())
             {
                 aes.Key = keyBytes;
                 aes.IV = iv;
 
-                var cryptoTransform = aes.CreateEncryptor(aes.Key, aes.IV);
+                var cryptoTransform = aes.CreateDecryptor(aes.Key, aes.IV);
                 return Decrypt(encrypted, cryptoTransform);
             }
         }
 
-        private byte[] Encrypt(byte[] data, ICryptoTransform cryptoTransform)
+        private byte[] Encrypt(string data, ICryptoTransform cryptoTransform)
         {
             if (data == null || data.Length <= 0)
                 throw new ArgumentException(nameof(data));
@@ -72,7 +77,7 @@ namespace Sandbox.Crypto
             if (data == null || data.Length <= 0)
                 throw new ArgumentException(nameof(data));
 
-            using (MemoryStream memoryStream = new MemoryStream())
+            using (MemoryStream memoryStream = new MemoryStream(data))
             {
                 using (var cryptoStream = new CryptoStream(memoryStream, cryptoTransform, CryptoStreamMode.Read))
                 {

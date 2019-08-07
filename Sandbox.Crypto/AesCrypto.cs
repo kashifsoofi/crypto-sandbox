@@ -6,20 +6,11 @@ namespace Sandbox.Crypto
 {
     public class AesCrypto
     {
-        public string GenerateKey()
+        public string Encrypt(string plainText, byte[] key)
         {
             using (var aes = Aes.Create())
             {
-                return Convert.ToBase64String(aes.Key);
-            }
-        }
-
-        public string Encrypt(string plainText, string key)
-        {
-            var keyBytes = Convert.FromBase64String(key);
-            using (var aes = Aes.Create())
-            {
-                aes.Key = keyBytes;
+                aes.Key = key;
 
                 var cryptoTransform = aes.CreateEncryptor(aes.Key, aes.IV);
 
@@ -33,7 +24,7 @@ namespace Sandbox.Crypto
             }
         }
 
-        public string Decrypt(string cipherText, string key)
+        public string Decrypt(string cipherText, byte[] key)
         {
             var data = Convert.FromBase64String(cipherText);
             byte ivSize = data[0];
@@ -42,10 +33,9 @@ namespace Sandbox.Crypto
             var encrypted = new byte[data.Length - ivSize - 1];
             Array.Copy(data, ivSize + 1, encrypted, 0, encrypted.Length);
 
-            var keyBytes = Convert.FromBase64String(key);
             using (var aes = Aes.Create())
             {
-                aes.Key = keyBytes;
+                aes.Key = key;
                 aes.IV = iv;
 
                 var cryptoTransform = aes.CreateDecryptor(aes.Key, aes.IV);

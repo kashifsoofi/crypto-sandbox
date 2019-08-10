@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Sandbox.Crypto.Tests
 {
-    public class AesCryptoTest
+    public class AesCryptoTests
     {
         private readonly string _plainText = "Here is some data to encrypt!";
 

@@ -14,7 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Sandbox.Crypto\Sandbox.Crypto.csproj" />
+    <ProjectReference Include="..\..\src\Sandbox.Crypto\Sandbox.Crypto.csproj" />
   </ItemGroup>
-
 </Project>

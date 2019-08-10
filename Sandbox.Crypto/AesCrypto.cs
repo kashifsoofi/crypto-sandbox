@@ -48,7 +48,7 @@ namespace Sandbox.Crypto
             if (data == null || data.Length <= 0)
                 throw new ArgumentException(nameof(data));
 
-            using (MemoryStream memoryStream = new MemoryStream())
+            using (var memoryStream = new MemoryStream())
             {
                 using (var cryptoStream = new CryptoStream(memoryStream, cryptoTransform, CryptoStreamMode.Write))
                 {
@@ -67,7 +67,7 @@ namespace Sandbox.Crypto
             if (data == null || data.Length <= 0)
                 throw new ArgumentException(nameof(data));
 
-            using (MemoryStream memoryStream = new MemoryStream(data))
+            using (var memoryStream = new MemoryStream(data))
             {
                 using (var cryptoStream = new CryptoStream(memoryStream, cryptoTransform, CryptoStreamMode.Read))
                 {

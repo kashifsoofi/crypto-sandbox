@@ -1,28 +1,33 @@
 ﻿using System;
 using System.Security.Cryptography;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace Sandbox.Crypto
 {
     public class RsaCrypto
     {
-        public (string privateKeyXml, string publicKeyXml) GenerateXmlKeyPair(int keySize)
+        public (string privateKeyJson, string publicKeyJson) GenerateKeyPair(int keySize)
         {
             using (var rsa = RSA.Create())
             {
-                rsa.KeySize = keySize;                
+                rsa.KeySize = keySize;
 
-                var privateKeyXml = rsa.ToXmlString(true);
-                var publicKeyXml = rsa.ToXmlString(false);
-                return (privateKeyXml, publicKeyXml);
+                var privateKey = rsa.ExportParameters(true);
+                var publicKey = rsa.ExportParameters(false);
+
+                var privateKeyJson = JsonConvert.SerializeObject(privateKey);
+                var publicKeyJson = JsonConvert.SerializeObject(publicKey);
+                return (privateKeyJson, publicKeyJson);
             }
         }
 
-        public string Encrypt(string plainText, string publicKeyXml)
+        public string Encrypt(string plainText, string publicKeyJson)
         {
             using (var rsa = RSA.Create())
             {
-                rsa.FromXmlString(publicKeyXml);
+                var rsaParameters = JsonConvert.DeserializeObject<RSAParameters>(publicKeyJson);
+                rsa.ImportParameters(rsaParameters);
 
                 var dataToEncrypt = Encoding.UTF8.GetBytes(plainText);
                 var encryptedData = rsa.Encrypt(dataToEncrypt, RSAEncryptionPadding.Pkcs1);
@@ -30,11 +35,12 @@ namespace Sandbox.Crypto
             }
         }
 
-        public string Decrypt(string encryptedData, string privateKeyXml)
+        public string Decrypt(string encryptedData, string privateKeyJson)
         {
             using (var rsa = RSA.Create())
             {
-                rsa.FromXmlString(privateKeyXml);
+                var rsaParameters = JsonConvert.DeserializeObject<RSAParameters>(privateKeyJson);
+                rsa.ImportParameters(rsaParameters);
 
                 var dataToDecrypt = Convert.FromBase64String(encryptedData);
                 var decryptedData = rsa.Decrypt(dataToDecrypt, RSAEncryptionPadding.Pkcs1);

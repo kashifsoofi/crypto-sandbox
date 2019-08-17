@@ -47,5 +47,31 @@ namespace Sandbox.Crypto
                 return Encoding.UTF8.GetString(decryptedData);
             }
         }
+
+        public string SignData(string data, string privateKeyJson)
+        {
+            using (var rsa = RSA.Create())
+            {
+                var rsaParameters = JsonConvert.DeserializeObject<RSAParameters>(privateKeyJson);
+                rsa.ImportParameters(rsaParameters);
+
+                var dataToSign = Encoding.UTF8.GetBytes(data);
+                var signature = rsa.SignData(dataToSign, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1);
+                return Convert.ToBase64String(signature);
+            }
+        }
+
+        public bool VerifySignature(string data, string signature, string publicKeyJson)
+        {
+            using (var rsa = RSA.Create())
+            {
+                var rsaParameters = JsonConvert.DeserializeObject<RSAParameters>(publicKeyJson);
+                rsa.ImportParameters(rsaParameters);
+
+                var dataToVerify = Encoding.UTF8.GetBytes(data);
+                var signatureData = Convert.FromBase64String(signature);
+                return rsa.VerifyData(dataToVerify, signatureData, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1);
+            }
+        }
     }
 }

@@ -33,7 +33,7 @@ func Encrypt(plainText string, key []byte) string {
 	dataLength := 1 + nonceSize + len(cipherText)
 	data := make([]byte, dataLength)
 	data[0] = byte(nonceSize)
-	copy(data[1:nonceSize], nonce)
+	copy(data[1:], nonce[0:nonceSize])
 	copy(data[1+nonceSize:], cipherText)
 
 	return base64.StdEncoding.EncodeToString(data)
@@ -44,11 +44,11 @@ func Decrypt(cipherText string, key []byte) string {
 
 	nonceSize := int(data[0])
 	nonce := make([]byte, nonceSize)
-	copy(nonce[0:nonceSize], data[1:nonceSize])
+	copy(nonce[0:nonceSize], data[1:1+nonceSize])
 
 	encryptedBytesSize := len(data) - nonceSize - 1
 	encryptedBytes := make([]byte, encryptedBytesSize)
-	copy(encryptedBytes[0:encryptedBytesSize], data[nonceSize + 1:encryptedBytesSize])
+	copy(encryptedBytes[0:encryptedBytesSize], data[nonceSize + 1:])
 
 	aes, err := aes.NewCipher(key)
 	if err != nil {

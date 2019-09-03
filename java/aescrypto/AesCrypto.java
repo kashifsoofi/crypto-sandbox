@@ -1,5 +1,3 @@
-package aescrypto;
-
 import java.nio.ByteBuffer;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -8,6 +6,7 @@ import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.KeySpec;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -46,7 +45,8 @@ public class AesCrypto {
 	public String encrypt(String plainText, 
 						  byte[] key)
 				   throws InvalidKeyException,
-				   		  InvalidAlgorithmParameterException {
+							 InvalidAlgorithmParameterException,
+							 Exception {
 		SecretKey secretKey = new SecretKeySpec(key, ALGORITHM);
 
 		SecureRandom random = new SecureRandom();
@@ -55,7 +55,7 @@ public class AesCrypto {
 		Cipher cipher = Cipher.getInstance(getTransformation());
 		cipher.init(Cipher.ENCRYPT_MODE, secretKey, createParameterSpec(iv, GcmTagSize * 8));
 
-		var plainTextBytes = plainText.getBytes("UTF_8");
+		byte[] plainTextBytes = plainText.getBytes("UTF8");
 		byte[] encryptedBytes = cipher.doFinal(plainTextBytes);
 		return packCipherData(encryptedBytes, iv);
 	}
@@ -63,29 +63,32 @@ public class AesCrypto {
 	public String decrypt(String cipherText, 
 						  byte[] key)
 				   throws InvalidKeyException,
-				   		  InvalidAlgorithmParameterException {
+						  InvalidAlgorithmParameterException,
+						  Exception {
 		SecretKey secretKey = new SecretKeySpec(key, ALGORITHM);
 
 		List<Object> cipherData = unpackCipherData(cipherText);
-		byte[] encryptedBytes = cipherData[0];
-		byte[] iv = cipherData[1];
-		byte gcmTagSize = cipherData[2];
+		byte[] encryptedBytes = (byte[])cipherData.get(0);
+		byte[] iv = (byte[])cipherData.get(1);
+		byte gcmTagSize = (byte)cipherData.get(2);
 
 		Cipher cipher = Cipher.getInstance(getTransformation());
 		cipher.init(Cipher.DECRYPT_MODE, secretKey, createParameterSpec(iv, gcmTagSize * 8));
 
-		var plainTextBytes = plainText.getBytes(UTF_8);
 		byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
-		return new String(decryptedBytes, "UTF_8");
+		return new String(decryptedBytes, "UTF8");
 	}
 
-	private AlgorithmParameterSpec createParameterSpec(byte[] iv, int macSize) {
+	private AlgorithmParameterSpec createParameterSpec(byte[] iv, int macSize) 
+		throws Exception {
 		if (cipherMode == CipherMode.CBC) {
 			return new IvParameterSpec(iv);
 		}
 		else if (cipherMode == CipherMode.GCM) {
 			return new GCMParameterSpec(macSize, iv);
 		}
+
+		throw new Exception("Unsupported CipherMode");
 	}
 
 	private String packCipherData(byte[] encryptedBytes, byte[] iv) {
@@ -119,6 +122,6 @@ public class AesCrypto {
 		byte[] encryptedBytes = new byte[buffer.remaining()];
 		buffer.get(encryptedBytes);
 
-		return Arrays.asList(encyptedBytes, iv, gcmTagSize);
+		return Arrays.asList(encryptedBytes, iv, gcmTagSize);
 	}
 }

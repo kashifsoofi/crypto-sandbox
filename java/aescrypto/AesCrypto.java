@@ -23,7 +23,7 @@ public class AesCrypto {
 
 	public enum Padding {
 		NoPadding,
-		PKCS7
+		PKCS5Padding
 	}
 
 	private final String ALGORITHM = "AES";
@@ -105,7 +105,7 @@ public class AesCrypto {
 		buffer.put(iv);
 		buffer.put(encryptedBytes);
 		byte[] data = buffer.array();
-		return Base64.getEncoder().withoutPadding().encodeToString(data);
+		return Base64.getEncoder().encodeToString(data);
 	}
 
 	private List<Object> unpackCipherData(String cipherText) {

@@ -6,19 +6,38 @@ import (
     "crypto/cipher"
     "crypto/rand"
     base64 "encoding/base64"
-    "io"
+	"io"
 )
 
-func Encrypt(plainText string, key []byte) string {
+type CipherMode int
+
+const (
+	CBC CipherMode = iota
+	GCM
+)
+
+type Padding int
+
+const (
+	NoPadding Padding = iota
+	PKCS7
+)
+
+type AesCrypto struct {
+	CipherMode CipherMode
+	Padding Padding
+}
+
+func (aesCrypto AesCrypto) Encrypt(plainText string, key []byte) (string, error) {
 	// create a new aes cipher using key
 	aes, err := aes.NewCipher(key)
 	if err != nil {
-		panic(err.Error)
+		return "", err
 	}
 
 	gcm, err := cipher.NewGCM(aes)
 	if err != nil {
-		panic(err.Error)
+		return "", err
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
@@ -36,34 +55,39 @@ func Encrypt(plainText string, key []byte) string {
 	copy(data[1:], nonce[0:nonceSize])
 	copy(data[1+nonceSize:], cipherText)
 
-	return base64.StdEncoding.EncodeToString(data)
+	return base64.StdEncoding.EncodeToString(data), nil
 }
 
-func Decrypt(cipherText string, key []byte) string {
-	data, _ := base64.StdEncoding.DecodeString(cipherText)
+func (crypto AesCrypto) Decrypt(cipherText string, key []byte) (string, error) {
+	data, err := base64.StdEncoding.DecodeString(cipherText)
+	if err != nil {
+		return "", err
+	}
 
-	nonceSize := int(data[0])
-	nonce := make([]byte, nonceSize)
-	copy(nonce[0:nonceSize], data[1:1+nonceSize])
-
-	encryptedBytesSize := len(data) - nonceSize - 1
-	encryptedBytes := make([]byte, encryptedBytesSize)
-	copy(encryptedBytes[0:encryptedBytesSize], data[nonceSize + 1:])
+	// unpack data
+	ivSize := int(data[0])
+	index := 1
+	tagSize := 0
+	if crypto.CipherMode == GCM {
+		tagSize = int(data[index])
+		index += 1
+	}
+	iv, encryptedBytes := data[index:index+ivSize], data[index+ivSize:]
 
 	aes, err := aes.NewCipher(key)
 	if err != nil {
-		panic(err.Error)
+		return "", err
 	}
 
-	gcm, err := cipher.NewGCM(aes)
+	aesgcm, err := cipher.NewGCMWithNonceSize(aes, tagSize) // only used for compatibility, NewGCM recomended
 	if err != nil {
-		panic(err.Error)
+		return "", err
 	}
 
-	plainText, err := gcm.Open(nil, nonce, encryptedBytes, nil)
+	decryptedBytes, err := aesgcm.Open(nil, iv, encryptedBytes, nil)
 	if err != nil {
-		panic(err.Error)
+		return "", err
 	}
 
-	return string(plainText[:len(plainText)])
+	return string(decryptedBytes[:len(decryptedBytes)]), nil
 }

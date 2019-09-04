@@ -1,30 +1,66 @@
 package aescrypto
 
-import "testing"
+import (
+	"testing"
+	"strings"
+	"github.com/google/uuid"
+)
 
-func TestEncrypt(t *testing.T) {
-	plainText := "Here is some data to encrypt!"
-	key := []byte("2E77A9E4120E486097E1200E2C73879A")
+const plainText = "Here is some data to encrypt!"
 
-	encrypted := Encrypt(plainText, key)
+func TestEncryptAndDecryptWithGcmNoPadding(t *testing.T) {
+	keyUuid := uuid.New().String()
+	key := []byte(strings.Replace(keyUuid, "-", "", -1))
+
+	aesCrypto := AesCrypto {
+		CipherMode: GCM,
+		Padding: NoPadding,
+	}
+	encrypted, err := aesCrypto.Encrypt(plainText, key)
+	if err != nil {
+		t.Errorf("%s", err);
+	}
+
+	t.Logf("Key: %s\n", keyUuid)
 	t.Logf("Encrypted: %s\n", encrypted)
 
-	decrypted := Decrypt(encrypted, key)
+	decrypted, err := aesCrypto.Decrypt(encrypted, key)
+	if err != nil {
+		t.Errorf("%s", err);
+	}
 	t.Logf("Decrypted: %s\n", decrypted)
 
-	if (decrypted != plainText) {
+	if decrypted != plainText {
 		t.Errorf("Decrypt error, got: %s, want: %s", decrypted, plainText)
 	}
 }
 
-func TestDecrypt(t *testing.T) {
-	plainText := "Here is some data to encrypt!"
-	cipherText := "DFpDJASoINV+fEdymPvnzJBwedDuLCtv6ElcM2N7ba+Nalq6V+RVqe0CzBSpCGqruCO4Fd/DBFGBxw=="
-	key := []byte("1015DDA61AD6497BAD00582CDC10B537")
+func TestDecryptWithGcmNoPadding(t *testing.T) {
+	var testData = []struct {
+		CipherText string
+		KeyUuid string
+	} {
+		// Encrypted with BC AES/GCM/NoPadding
+		{ "EBA6cMY4KY9Ry9xR6U5TZlCGqHpFSIEOqvxIkFX4QvSotaWj6XztRRTsUa+FQTKICat7RU+CIGR5VS+J9uvh", "40f5dca1-81a8-44a0-8667-dbe2d5393a65"},
+		// Encrypted with Java AES/GCM/NoPadding
+		{ "EBBnZdJcwfZxC9kdwRMt8YVADEXHa0VOpb3HkImm7nytjHsFiQs09Cfv48vZ9fJTX/oot6saYFPkoMDSScM7", "9b71be77-c730-47c6-841c-d597282792ef"},
+	}
 
-	decrypted := Decrypt(cipherText, key)
+	aesCrypto := AesCrypto {
+		CipherMode: GCM,
+		Padding: NoPadding,
+	}
 
-	if (decrypted != plainText) {
-		t.Errorf("Decrypt error, got: %s, want: %s", decrypted, plainText)
+	for _, testData := range testData {
+		key := []byte(strings.Replace(testData.KeyUuid, "-", "", -1))
+
+		decrypted, err := aesCrypto.Decrypt(testData.CipherText, key)
+		if err != nil {
+			t.Errorf("%s", err);
+		}
+	
+		if decrypted != plainText {
+			t.Errorf("Decrypt error, got: %s, want: %s", decrypted, plainText)
+		}
 	}
 }

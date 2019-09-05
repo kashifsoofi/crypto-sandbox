@@ -49,11 +49,13 @@ func (aesCrypto AesCrypto) Encrypt(plainText string, key []byte) (string, error)
 	cipherText := gcm.Seal(nil, nonce, plainTextBytes, nil)
 
 	nonceSize := gcm.NonceSize()
-	dataLength := 1 + nonceSize + len(cipherText)
+	dataLength := 2 + nonceSize + len(cipherText)	
 	data := make([]byte, dataLength)
+	// set first 2 bytes as nonceSize, to make cipher data compatible with crypto methods in other languages in this repo
 	data[0] = byte(nonceSize)
-	copy(data[1:], nonce[0:nonceSize])
-	copy(data[1+nonceSize:], cipherText)
+	data[1] = byte(nonceSize)
+	copy(data[2:], nonce[0:nonceSize])
+	copy(data[2+nonceSize:], cipherText)
 
 	return base64.StdEncoding.EncodeToString(data), nil
 }
@@ -63,7 +65,7 @@ func (crypto AesCrypto) Decrypt(cipherText string, key []byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
+	
 	// unpack data
 	ivSize := int(data[0])
 	index := 1
@@ -79,7 +81,13 @@ func (crypto AesCrypto) Decrypt(cipherText string, key []byte) (string, error) {
 		return "", err
 	}
 
-	aesgcm, err := cipher.NewGCMWithNonceSize(aes, tagSize) // only used for compatibility, NewGCM recomended
+	var aesgcm cipher.AEAD
+	if tagSize == 12 {
+		aesgcm, err = cipher.NewGCM(aes)
+	} else {
+		aesgcm, err = cipher.NewGCMWithNonceSize(aes, tagSize) // only used for compatibility, NewGCM recomended
+	}
+	
 	if err != nil {
 		return "", err
 	}

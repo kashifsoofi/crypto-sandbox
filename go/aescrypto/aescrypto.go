@@ -7,6 +7,7 @@ import (
     "crypto/rand"
     base64 "encoding/base64"
 	"io"
+	"strings"
 )
 
 type CipherMode int
@@ -49,18 +50,19 @@ func (aesCrypto AesCrypto) Encrypt(plainText string, key []byte) (string, error)
 	cipherText := gcm.Seal(nil, nonce, plainTextBytes, nil)
 
 	nonceSize := gcm.NonceSize()
+	tagSize := gcm.Overhead()
 	dataLength := 2 + nonceSize + len(cipherText)	
 	data := make([]byte, dataLength)
 	// set first 2 bytes as nonceSize, to make cipher data compatible with crypto methods in other languages in this repo
 	data[0] = byte(nonceSize)
-	data[1] = byte(nonceSize)
+	data[1] = byte(tagSize)
 	copy(data[2:], nonce[0:nonceSize])
 	copy(data[2+nonceSize:], cipherText)
 
 	return base64.StdEncoding.EncodeToString(data), nil
 }
 
-func (crypto AesCrypto) Decrypt(cipherText string, key []byte) (string, error) {
+func (crypto AesCrypto) Decrypt(cipherText string, key []byte, provider string) (string, error) {
 	data, err := base64.StdEncoding.DecodeString(cipherText)
 	if err != nil {
 		return "", err
@@ -82,7 +84,7 @@ func (crypto AesCrypto) Decrypt(cipherText string, key []byte) (string, error) {
 	}
 
 	var aesgcm cipher.AEAD
-	if tagSize == 12 {
+	if strings.EqualFold("go", provider) {
 		aesgcm, err = cipher.NewGCM(aes)
 	} else {
 		aesgcm, err = cipher.NewGCMWithNonceSize(aes, tagSize) // only used for compatibility, NewGCM recomended

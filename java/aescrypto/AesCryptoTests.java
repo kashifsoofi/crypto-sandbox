@@ -57,6 +57,20 @@ public class AesCryptoTests {
 	}
 
 	@Test
+	public void shouldDecrypt_WithGcmNoPadding_EncryptedByGoNewGCM()
+		throws UnsupportedEncodingException, InvalidKeyException, InvalidAlgorithmParameterException, Exception {
+		String cipherText = "DBBJlLBym6tNgE5vMT2Vz45ChQLqsYFwXM4jKXVtRsLKbySgM5bkdxUjhwEjEVgzAALmthebr3bZWs8=";
+		String encryptionKey = "c1b7232d-cd93-4baa-b6a0-64dccb3f1583";
+		byte[] key = encryptionKey.replace("-", "").getBytes("UTF8");
+
+		AesCrypto aesCrypto = new AesCrypto(AesCrypto.CipherMode.GCM, AesCrypto.Padding.NoPadding);
+		String decrypted = aesCrypto.decrypt(cipherText, key);
+
+		assertNotNull(decrypted);
+		assertEquals(decrypted, PlainText);
+	}
+
+	@Test
 	public void should_EncryptAndDecrypt_WithCbcPkcs5()
 		throws UnsupportedEncodingException, InvalidKeyException, InvalidAlgorithmParameterException, Exception {
 		AesCrypto aesCrypto = new AesCrypto(AesCrypto.CipherMode.CBC, AesCrypto.Padding.PKCS5Padding);

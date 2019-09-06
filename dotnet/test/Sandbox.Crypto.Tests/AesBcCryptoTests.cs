@@ -32,6 +32,8 @@ namespace Sandbox.Crypto.Tests
         [InlineData("EBA6cMY4KY9Ry9xR6U5TZlCGqHpFSIEOqvxIkFX4QvSotaWj6XztRRTsUa+FQTKICat7RU+CIGR5VS+J9uvh", "40f5dca1-81a8-44a0-8667-dbe2d5393a65")]
         // Encrypted with Java AES/GCM/NoPadding
         [InlineData("EBBnZdJcwfZxC9kdwRMt8YVADEXHa0VOpb3HkImm7nytjHsFiQs09Cfv48vZ9fJTX/oot6saYFPkoMDSScM7", "9b71be77-c730-47c6-841c-d597282792ef")]
+        // Encrypted with Go NewGCM
+        [InlineData("DBBJlLBym6tNgE5vMT2Vz45ChQLqsYFwXM4jKXVtRsLKbySgM5bkdxUjhwEjEVgzAALmthebr3bZWs8=", "c1b7232d-cd93-4baa-b6a0-64dccb3f1583")]
         // Microsoft does not support GCM in .netstandard 2.0 (its coming in .netstandard 2.1)
         public void Decrypt_should_decrypt_cipherText_GCM_NOPADDING(string cipherText, string key)
         {

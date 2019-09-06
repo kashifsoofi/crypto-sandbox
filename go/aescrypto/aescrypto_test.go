@@ -63,3 +63,38 @@ func TestDecryptWithGcmNoPadding(t *testing.T) {
 		}
 	}
 }
+
+func TestDecryptWithCbcPkcs7(t *testing.T) {
+	var testData = []struct {
+		CipherText string
+		KeyUuid string
+		Provider string
+	} {
+		// Encrypted with Microsoft AES
+		{ "EFb6BdUqhHJQRsVxnD53sSDfflNfWjntak2paSCpgJCsp0u46vIbHsK4mwX3g32UeA==", "b963fdc3-4580-468b-88be-04f6630ef700", "System.Security.Cryptography" },
+		// Encrypted with BC AES/CBC/PKCS7
+		{ "EFLPMGDLwsFlXqLXuM350XZv8S5DSomV7FyixHlDVI/POFKJ0IY3LzzaxUZ2jDFhIQ==", "850c8111-339e-453b-afdd-89a99cad849b", "BouncyCastle.Net" },
+		// Encrypted with Java AES/CBC/Pkcs5
+		{ "EFtp6J1Fy1zVlewstk14Klg4oV7BLtGIgdnNwfHHlHbRv2fLVUgHpo+v8CwO2QimCw==", "458d1677-f515-4287-868a-fb1904e2fa10", "Java" },
+	}
+
+	aesCrypto := AesCrypto {
+		CipherMode: CBC,
+		Padding: PKCS7,
+	}
+
+	for _, testData := range testData {
+		key := []byte(strings.Replace(testData.KeyUuid, "-", "", -1))
+
+		decrypted, err := aesCrypto.Decrypt(testData.CipherText, key, testData.Provider)
+		if err != nil {
+			t.Errorf("%s", err);
+		}
+	
+		if decrypted != plainText {
+			t.Errorf("Decrypt error for provider: %s, got: [%s], want: [%s]", testData.Provider, decrypted, plainText)
+			t.Errorf("[% x]\n", []byte(decrypted))
+			t.Errorf("[% x]\n", []byte(plainText))
+		}
+	}
+}

@@ -8,6 +8,8 @@ import (
     base64 "encoding/base64"
 	"io"
 	"strings"
+	"bytes"
+	"fmt"
 )
 
 type CipherMode int
@@ -68,22 +70,23 @@ func (crypto AesCrypto) Decrypt(cipherText string, key []byte, provider string) 
 		return "", err
 	}
 	
-	// unpack data
-	ivSize := int(data[0])
-	index := 1
-	tagSize := 0
-	if crypto.CipherMode == GCM {
-		tagSize = int(data[index])
-		index += 1
-	}
-	iv, encryptedBytes := data[index:index+ivSize], data[index+ivSize:]
+	iv, encryptedBytes, tagSize := crypto.UnpackCipherData(data)
 
 	aes, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err
 	}
 
+	if crypto.CipherMode == GCM {
+		return DecryptGcm(aes, iv, tagSize, encryptedBytes, provider)
+	} else {
+		return DecryptCbc(aes, iv, encryptedBytes)
+	}
+}
+
+func DecryptGcm(aes cipher.Block, iv []byte, tagSize int, encrypted []byte, provider string) (string, error) {
 	var aesgcm cipher.AEAD
+	var err error
 	if strings.EqualFold("go", provider) {
 		aesgcm, err = cipher.NewGCM(aes)
 	} else {
@@ -94,10 +97,75 @@ func (crypto AesCrypto) Decrypt(cipherText string, key []byte, provider string) 
 		return "", err
 	}
 
-	decryptedBytes, err := aesgcm.Open(nil, iv, encryptedBytes, nil)
+	decryptedBytes, err := aesgcm.Open(nil, iv, encrypted, nil)
 	if err != nil {
 		return "", err
 	}
 
 	return string(decryptedBytes[:len(decryptedBytes)]), nil
+}
+
+func DecryptCbc(aes cipher.Block, iv []byte, encrypted []byte) (string, error) {
+	decryptor := cipher.NewCBCDecrypter(aes, iv)
+
+	decryptedBytes := make([]byte, len(encrypted))
+	decryptor.CryptBlocks(decryptedBytes, encrypted)
+
+	decryptedBytes, err := pkcs7Unpad(decryptedBytes, 8)
+	if err != nil {
+		return "", err
+	}
+
+	return string(decryptedBytes[:len(decryptedBytes)]), nil
+}
+
+func (crypto AesCrypto) UnpackCipherData(data []byte) ([]byte, []byte, int) {
+	ivSize := int(data[0])
+	index := 1
+	tagSize := 0
+	if crypto.CipherMode == GCM {
+		tagSize = int(data[index])
+		index += 1
+	}
+	iv, encryptedBytes := data[index:index+ivSize], data[index+ivSize:]
+
+	return iv, encryptedBytes, tagSize
+}
+
+// ref: https://golang-examples.tumblr.com/post/98350728789/pkcs7-padding
+// Appends padding.
+func pkcs7Pad(data []byte, blocklen int) ([]byte, error) {
+    if blocklen <= 0 {
+        return nil, fmt.Errorf("Invalid block length %d", blocklen)
+    }
+    padlen := 1
+    for ((len(data) + padlen) % blocklen) != 0 {
+        padlen = padlen + 1
+    }
+
+    pad := bytes.Repeat([]byte{byte(padlen)}, padlen)
+    return append(data, pad...), nil
+}
+
+// Returns slice of the original data without padding.
+func pkcs7Unpad(data []byte, blocklen int) ([]byte, error) {
+    if blocklen <= 0 {
+        return nil, fmt.Errorf("Invalid block length %d", blocklen)
+    }
+    if len(data)%blocklen != 0 || len(data) == 0 {
+        return nil, fmt.Errorf("Invalid data length %d", len(data))
+    }
+    padlen := int(data[len(data)-1])
+    if padlen > blocklen || padlen == 0 {
+        return nil, fmt.Errorf("Invalid padding")
+    }
+    // check padding
+    pad := data[len(data)-padlen:]
+    for i := 0; i < padlen; i++ {
+        if pad[i] != byte(padlen) {
+            return nil, fmt.Errorf("Invalid padding")
+        }
+    }
+
+    return data[:len(data)-padlen], nil
 }

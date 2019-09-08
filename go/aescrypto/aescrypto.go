@@ -31,13 +31,23 @@ type AesCrypto struct {
 	Padding Padding
 }
 
-func (aesCrypto AesCrypto) Encrypt(plainText string, key []byte) (string, error) {
+const AesIvSize = 16
+
+func (crypto AesCrypto) Encrypt(plainText string, key []byte) (string, error) {
 	// create a new aes cipher using key
 	aes, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err
 	}
 
+	if crypto.CipherMode == GCM {
+		return crypto.EncryptGcm(aes, plainText)
+	} else {
+		return crypto.EncryptCbc(aes, plainText)
+	}
+}
+
+func (crypto AesCrypto) EncryptGcm(aes cipher.Block, plainText string) (string, error) {
 	gcm, err := cipher.NewGCM(aes)
 	if err != nil {
 		return "", err
@@ -45,23 +55,33 @@ func (aesCrypto AesCrypto) Encrypt(plainText string, key []byte) (string, error)
 
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		panic(err.Error)
+		return "", err
 	}
 
 	plainTextBytes := []byte(plainText)
 	cipherText := gcm.Seal(nil, nonce, plainTextBytes, nil)
 
-	nonceSize := gcm.NonceSize()
-	tagSize := gcm.Overhead()
-	dataLength := 2 + nonceSize + len(cipherText)	
-	data := make([]byte, dataLength)
-	// set first 2 bytes as nonceSize, to make cipher data compatible with crypto methods in other languages in this repo
-	data[0] = byte(nonceSize)
-	data[1] = byte(tagSize)
-	copy(data[2:], nonce[0:nonceSize])
-	copy(data[2+nonceSize:], cipherText)
+	return crypto.PackCipherData(cipherText, nonce, gcm.Overhead()), nil
+}
 
-	return base64.StdEncoding.EncodeToString(data), nil
+func (crypto AesCrypto) EncryptCbc(aes cipher.Block, plainText string) (string, error) {
+	iv := make([]byte, AesIvSize)
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return "", err
+	}
+
+	encrypter := cipher.NewCBCEncrypter(aes, iv)
+
+	plainTextBytes := []byte(plainText)
+	plainTextBytes, err := pkcs7Pad(plainTextBytes, encrypter.BlockSize())
+	if err != nil {
+		return "", err
+	}
+	
+	cipherText := make([]byte, len(plainTextBytes))
+	encrypter.CryptBlocks(cipherText, plainTextBytes)
+
+	return crypto.PackCipherData(cipherText, iv, 0), nil
 }
 
 func (crypto AesCrypto) Decrypt(cipherText string, key []byte, provider string) (string, error) {
@@ -111,12 +131,36 @@ func DecryptCbc(aes cipher.Block, iv []byte, encrypted []byte) (string, error) {
 	decryptedBytes := make([]byte, len(encrypted))
 	decryptor.CryptBlocks(decryptedBytes, encrypted)
 
-	decryptedBytes, err := pkcs7Unpad(decryptedBytes, 8)
+	decryptedBytes, err := pkcs7Unpad(decryptedBytes, decryptor.BlockSize())
 	if err != nil {
 		return "", err
 	}
 
 	return string(decryptedBytes[:len(decryptedBytes)]), nil
+}
+
+func (crypto AesCrypto) PackCipherData(cipherText []byte, iv []byte, tagSize int) (string) {
+	ivLength := len(iv)
+	dataLength := len(cipherText) + ivLength + 1
+	if crypto.CipherMode == GCM {
+		dataLength += 1
+	}
+
+	data := make([]byte, dataLength)
+
+	// set first 2 bytes as nonceSize, to make cipher data compatible with crypto methods in other languages in this repo
+
+	data[0] = byte(ivLength)
+	index := 1
+	if crypto.CipherMode == GCM {
+		data[1] = byte(tagSize)
+		index += 1
+	}
+	copy(data[index:], iv[0:ivLength])
+	index += ivLength
+	copy(data[index:], cipherText)
+
+	return base64.StdEncoding.EncodeToString(data)
 }
 
 func (crypto AesCrypto) UnpackCipherData(data []byte) ([]byte, []byte, int) {

@@ -64,6 +64,29 @@ func TestDecryptWithGcmNoPadding(t *testing.T) {
 	}
 }
 
+func TestEncryptAndDecryptWithCbcPkcs7(t *testing.T) {
+	keyUuid := uuid.New().String()
+	key := []byte(strings.Replace(keyUuid, "-", "", -1))
+
+	aesCrypto := AesCrypto {
+		CipherMode: CBC,
+		Padding: PKCS7,
+	}
+	encrypted, err := aesCrypto.Encrypt(plainText, key)
+	if err != nil {
+		t.Errorf("%s", err);
+	}
+
+	decrypted, err := aesCrypto.Decrypt(encrypted, key, "go")
+	if err != nil {
+		t.Errorf("%s", err);
+	}
+
+	if decrypted != plainText {
+		t.Errorf("Decrypt error, got: %s, want: %s", decrypted, plainText)
+	}
+}
+
 func TestDecryptWithCbcPkcs7(t *testing.T) {
 	var testData = []struct {
 		CipherText string
@@ -76,6 +99,8 @@ func TestDecryptWithCbcPkcs7(t *testing.T) {
 		{ "EFLPMGDLwsFlXqLXuM350XZv8S5DSomV7FyixHlDVI/POFKJ0IY3LzzaxUZ2jDFhIQ==", "850c8111-339e-453b-afdd-89a99cad849b", "BouncyCastle.Net" },
 		// Encrypted with Java AES/CBC/Pkcs5
 		{ "EFtp6J1Fy1zVlewstk14Klg4oV7BLtGIgdnNwfHHlHbRv2fLVUgHpo+v8CwO2QimCw==", "458d1677-f515-4287-868a-fb1904e2fa10", "Java" },
+		// Encrypted with Go CBC/Pkcs7
+		{ "EObbJEuipxyNvXoiPrf4AkeZa4VX0spJqmcbws0hponQC/gwT0GCmkClMhv8FECGog==", "9ea4e9a5-3a3c-449a-baaa-3096567586d2", "go" },
 	}
 
 	aesCrypto := AesCrypto {

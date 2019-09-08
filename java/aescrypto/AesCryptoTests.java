@@ -130,4 +130,18 @@ public class AesCryptoTests {
 		assertNotNull(decrypted);
 		assertEquals(decrypted, PlainText);
 	}
+
+	@Test
+	public void shouldDecrypt_WithCbcPkcs5_EncryptedByGoCbcPkcs7()
+		throws UnsupportedEncodingException, InvalidKeyException, InvalidAlgorithmParameterException, Exception {
+			String cipherText = "EObbJEuipxyNvXoiPrf4AkeZa4VX0spJqmcbws0hponQC/gwT0GCmkClMhv8FECGog==";
+			String encryptionKey = "9ea4e9a5-3a3c-449a-baaa-3096567586d2";
+			byte[] key = encryptionKey.replace("-", "").getBytes("UTF8");
+	
+			AesCrypto aesCrypto = new AesCrypto(AesCrypto.CipherMode.CBC, AesCrypto.Padding.PKCS5Padding);
+			String decrypted = aesCrypto.decrypt(cipherText, key);
+	
+			assertNotNull(decrypted);
+			assertEquals(decrypted, PlainText);
+	}
 }

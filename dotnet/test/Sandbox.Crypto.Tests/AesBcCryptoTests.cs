@@ -71,6 +71,8 @@ namespace Sandbox.Crypto.Tests
         [InlineData("EFLPMGDLwsFlXqLXuM350XZv8S5DSomV7FyixHlDVI/POFKJ0IY3LzzaxUZ2jDFhIQ==", "850c8111-339e-453b-afdd-89a99cad849b")]
         // Encrypted with Java AES/CBC/Pkcs5
         [InlineData("EFtp6J1Fy1zVlewstk14Klg4oV7BLtGIgdnNwfHHlHbRv2fLVUgHpo+v8CwO2QimCw==", "458d1677-f515-4287-868a-fb1904e2fa10")]
+        // Encrypted with Go CBC/Pkcs7
+        [InlineData("EObbJEuipxyNvXoiPrf4AkeZa4VX0spJqmcbws0hponQC/gwT0GCmkClMhv8FECGog==", "9ea4e9a5-3a3c-449a-baaa-3096567586d2")]
         public void Decrypt_should_decrypt_cipherText_CBC_PKCS7(string cipherText, string key)
         {
             var aesBcCrypto = new AesBcCrypto(CipherMode.CBC, Padding.PKCS7);

@@ -90,7 +90,7 @@ func (crypto AesCrypto) Decrypt(cipherText string, key []byte, provider string) 
 		return "", err
 	}
 	
-	iv, encryptedBytes, tagSize := crypto.UnpackCipherData(data)
+	encryptedBytes, iv, tagSize := crypto.UnpackCipherData(data)
 
 	aes, err := aes.NewCipher(key)
 	if err != nil {
@@ -98,13 +98,13 @@ func (crypto AesCrypto) Decrypt(cipherText string, key []byte, provider string) 
 	}
 
 	if crypto.CipherMode == GCM {
-		return DecryptGcm(aes, iv, tagSize, encryptedBytes, provider)
+		return DecryptGcm(aes, encryptedBytes, iv, tagSize, provider)
 	} else {
-		return DecryptCbc(aes, iv, encryptedBytes)
+		return DecryptCbc(aes, encryptedBytes, iv)
 	}
 }
 
-func DecryptGcm(aes cipher.Block, iv []byte, tagSize int, encrypted []byte, provider string) (string, error) {
+func DecryptGcm(aes cipher.Block, encrypted []byte, nonce []byte, tagSize int, provider string) (string, error) {
 	var aesgcm cipher.AEAD
 	var err error
 	if strings.EqualFold("go", provider) {
@@ -117,7 +117,7 @@ func DecryptGcm(aes cipher.Block, iv []byte, tagSize int, encrypted []byte, prov
 		return "", err
 	}
 
-	decryptedBytes, err := aesgcm.Open(nil, iv, encrypted, nil)
+	decryptedBytes, err := aesgcm.Open(nil, nonce, encrypted, nil)
 	if err != nil {
 		return "", err
 	}
@@ -125,7 +125,7 @@ func DecryptGcm(aes cipher.Block, iv []byte, tagSize int, encrypted []byte, prov
 	return string(decryptedBytes[:len(decryptedBytes)]), nil
 }
 
-func DecryptCbc(aes cipher.Block, iv []byte, encrypted []byte) (string, error) {
+func DecryptCbc(aes cipher.Block, encrypted []byte, iv []byte) (string, error) {
 	decryptor := cipher.NewCBCDecrypter(aes, iv)
 
 	decryptedBytes := make([]byte, len(encrypted))
@@ -173,7 +173,7 @@ func (crypto AesCrypto) UnpackCipherData(data []byte) ([]byte, []byte, int) {
 	}
 	iv, encryptedBytes := data[index:index+ivSize], data[index+ivSize:]
 
-	return iv, encryptedBytes, tagSize
+	return encryptedBytes, iv, tagSize
 }
 
 // ref: https://golang-examples.tumblr.com/post/98350728789/pkcs7-padding

@@ -32,7 +32,7 @@ namespace Sandbox.Crypto
 
         public string Encrypt(string plainText, string publicKeyJson)
         {
-            var encryptionKey = JsonConvert.DeserializeObject<AsymmetricKeyParameter>(publicKeyJson);
+            var encryptionKey = JsonConvert.DeserializeObject<RsaKeyParameters>(publicKeyJson);
 
             var cipher = CipherUtilities.GetCipher(Algorithm);
             cipher.Init(true, encryptionKey);
@@ -44,12 +44,12 @@ namespace Sandbox.Crypto
 
         public string Decrypt(string encryptedData, string privateKeyJson)
         {
-            var decryptionKey = JsonConvert.DeserializeObject<AsymmetricKeyParameter>(privateKeyJson);
+            var decryptionKey = JsonConvert.DeserializeObject<RsaPrivateCrtKeyParameters>(privateKeyJson);
 
             var cipher = CipherUtilities.GetCipher(Algorithm);
             cipher.Init(false, decryptionKey);
 
-            int blockSize = ((RsaPrivateCrtKeyParameters)decryptionKey).Modulus.BitLength / 8;
+            int blockSize = decryptionKey.Modulus.BitLength / 8;
 
             var dataToDecrypt = Convert.FromBase64String(encryptedData);
             var decryptedData = ApplyCipher(dataToDecrypt, cipher, blockSize);
@@ -58,7 +58,7 @@ namespace Sandbox.Crypto
 
         public string SignData(string data, string privateKeyJson)
         {
-            var signatureKey = JsonConvert.DeserializeObject<AsymmetricKeyParameter>(privateKeyJson);
+            var signatureKey = JsonConvert.DeserializeObject<RsaPrivateCrtKeyParameters>(privateKeyJson);
 
             var dataToSign = Encoding.UTF8.GetBytes(data);
 
@@ -72,7 +72,7 @@ namespace Sandbox.Crypto
 
         public bool VerifySignature(string data, string signature, string publicKeyJson)
         {
-            var signatureKey = JsonConvert.DeserializeObject<AsymmetricKeyParameter>(publicKeyJson);
+            var signatureKey = JsonConvert.DeserializeObject<RsaKeyParameters>(publicKeyJson);
 
             var dataToVerify = Encoding.UTF8.GetBytes(data);
             var binarySignature = Convert.FromBase64String(signature);

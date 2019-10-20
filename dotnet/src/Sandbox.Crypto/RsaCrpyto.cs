@@ -7,18 +7,18 @@ namespace Sandbox.Crypto
 {
     public class RsaCrypto
     {
-        public (string privateKeyJson, string publicKeyJson) GenerateKeyPair(int keySize)
+        public (string privateKeyParametersJson, string publicKeyParametersJson) GenerateKeyPair(int keySize)
         {
             using (var rsa = RSA.Create())
             {
                 rsa.KeySize = keySize;
 
-                var privateKey = rsa.ExportParameters(true);
-                var publicKey = rsa.ExportParameters(false);
+                var privateKeyParameters = rsa.ExportParameters(true).ToPrivateKeyParameters();
+                var publicKeyParameters = rsa.ExportParameters(false).ToPublicKeyParameters();
 
-                var privateKeyJson = JsonConvert.SerializeObject(privateKey);
-                var publicKeyJson = JsonConvert.SerializeObject(publicKey);
-                return (privateKeyJson, publicKeyJson);
+                var privateKeyParametersJson = JsonConvert.SerializeObject(privateKeyParameters);
+                var publicKeyParametersJson = JsonConvert.SerializeObject(publicKeyParameters);
+                return (privateKeyParametersJson, publicKeyParametersJson);
             }
         }
 
@@ -26,7 +26,7 @@ namespace Sandbox.Crypto
         {
             using (var rsa = RSA.Create())
             {
-                var rsaParameters = JsonConvert.DeserializeObject<RSAParameters>(publicKeyJson);
+                var rsaParameters = JsonConvert.DeserializeObject<RsaPublicKeyParameters>(publicKeyJson).ToRSAParameters();
                 rsa.ImportParameters(rsaParameters);
 
                 var dataToEncrypt = Encoding.UTF8.GetBytes(plainText);
@@ -39,7 +39,7 @@ namespace Sandbox.Crypto
         {
             using (var rsa = RSA.Create())
             {
-                var rsaParameters = JsonConvert.DeserializeObject<RSAParameters>(privateKeyJson);
+                var rsaParameters = JsonConvert.DeserializeObject<RsaPrivateKeyParameters>(privateKeyJson).ToRSAParameters();
                 rsa.ImportParameters(rsaParameters);
 
                 var dataToDecrypt = Convert.FromBase64String(encryptedData);
@@ -52,7 +52,7 @@ namespace Sandbox.Crypto
         {
             using (var rsa = RSA.Create())
             {
-                var rsaParameters = JsonConvert.DeserializeObject<RSAParameters>(privateKeyJson);
+                var rsaParameters = JsonConvert.DeserializeObject<RsaPrivateKeyParameters>(privateKeyJson).ToRSAParameters();
                 rsa.ImportParameters(rsaParameters);
 
                 var dataToSign = Encoding.UTF8.GetBytes(data);
@@ -65,7 +65,7 @@ namespace Sandbox.Crypto
         {
             using (var rsa = RSA.Create())
             {
-                var rsaParameters = JsonConvert.DeserializeObject<RSAParameters>(publicKeyJson);
+                var rsaParameters = JsonConvert.DeserializeObject<RsaPublicKeyParameters>(publicKeyJson).ToRSAParameters();
                 rsa.ImportParameters(rsaParameters);
 
                 var dataToVerify = Encoding.UTF8.GetBytes(data);

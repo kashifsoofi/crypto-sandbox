@@ -23,6 +23,7 @@ namespace Sandbox.Crypto
 
         public static RsaPrivateCrtKeyParameters ToRsaPrivateCrtKeyParameters(this RsaPrivateKeyParameters rsaPrivateKeyParameters)
         {
+        // ref: https://src-bin.com/en/q/e7ddf
             return new RsaPrivateCrtKeyParameters(
                 new BigInteger(1, rsaPrivateKeyParameters.Modulus),
                 new BigInteger(1, rsaPrivateKeyParameters.Exponent),

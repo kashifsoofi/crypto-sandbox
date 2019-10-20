@@ -1,4 +1,6 @@
 ﻿using System.Security.Cryptography;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Math;
 
 namespace Sandbox.Crypto
 {
@@ -17,6 +19,19 @@ namespace Sandbox.Crypto
                 Modulus = rsaPrivateKeyParameters.Modulus,
                 Exponent = rsaPrivateKeyParameters.Exponent,
             };
+        }
+
+        public static RsaPrivateCrtKeyParameters ToRsaPrivateCrtKeyParameters(this RsaPrivateKeyParameters rsaPrivateKeyParameters)
+        {
+            return new RsaPrivateCrtKeyParameters(
+                new BigInteger(1, rsaPrivateKeyParameters.Modulus),
+                new BigInteger(1, rsaPrivateKeyParameters.Exponent),
+                new BigInteger(1, rsaPrivateKeyParameters.D),
+                new BigInteger(1, rsaPrivateKeyParameters.P),
+                new BigInteger(1, rsaPrivateKeyParameters.Q),
+                new BigInteger(1, rsaPrivateKeyParameters.DP),
+                new BigInteger(1, rsaPrivateKeyParameters.DQ),
+                new BigInteger(1, rsaPrivateKeyParameters.InverseQ));
         }
     }
 }

@@ -30,7 +30,7 @@ namespace Sandbox.Crypto
                 rsa.ImportParameters(rsaParameters);
 
                 var dataToEncrypt = Encoding.UTF8.GetBytes(plainText);
-                var encryptedData = rsa.Encrypt(dataToEncrypt, RSAEncryptionPadding.Pkcs1);
+                var encryptedData = rsa.Encrypt(dataToEncrypt, RSAEncryptionPadding.OaepSHA256);
                 return Convert.ToBase64String(encryptedData);
             }
         }
@@ -43,7 +43,7 @@ namespace Sandbox.Crypto
                 rsa.ImportParameters(rsaParameters);
 
                 var dataToDecrypt = Convert.FromBase64String(encryptedData);
-                var decryptedData = rsa.Decrypt(dataToDecrypt, RSAEncryptionPadding.Pkcs1);
+                var decryptedData = rsa.Decrypt(dataToDecrypt, RSAEncryptionPadding.OaepSHA256);
                 return Encoding.UTF8.GetString(decryptedData);
             }
         }

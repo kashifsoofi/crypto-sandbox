@@ -3,14 +3,14 @@ using Xunit;
 
 namespace Sandbox.Crypto.Tests
 {
-    public class RsaCryptoTests
+    public class RsaBcCryptoTests
     {
         private readonly string _plainText = "Here is some data to encrypt!";
 
         [Fact]
         public void Should_Generate_KeyPair()
         {
-            var rsaCrypto = new RsaCrypto();
+            var rsaCrypto = new RsaBcCrypto();
 
             var (privateKeyJson, publicKeyJson) = rsaCrypto.GenerateKeyPair(2048);
 
@@ -21,7 +21,7 @@ namespace Sandbox.Crypto.Tests
         [Fact]
         public void Should_Encrypt_And_Decrypt_With_Generated_Key()
         {
-            var rsaCrypto = new RsaCrypto();
+            var rsaCrypto = new RsaBcCrypto();
             var (privateKeyJson, publicKeyJson) = rsaCrypto.GenerateKeyPair(2048);
 
             var encrypted = rsaCrypto.Encrypt(_plainText, publicKeyJson);
@@ -42,7 +42,7 @@ namespace Sandbox.Crypto.Tests
         [InlineData("{\"Modulus\":\"pUcAviqTeZlTTevWP4fJziy5wdEHBBvWhyVxtIDG4BNv3DuFPKWEUxQVfbMBRy8HzZwulUoNxRuXeEgDcrZXzKADRkywklazN4KN0UTINurP37UXqnvdPllVBTzI+2acrMg4iVd97pa918BhWvpfmuAatcSY8UNOB9FKpdJtC3GEegPhP4DQ0QD7JEN9OrviCXebPcdJbgsI7zUqNs7kXXf0RWIMgP1HgI42Wbcmlc6ce41zv7xouBaY0bsuJfZOiR1E0+aCJ34L+JFbZahGZKuoYcugIIvFo5rXhIJ48UiLWO2uThttX4gTZmmfQVYXB3xvLWxXtc1U70jEG9hqnQ==\",\"Exponent\":\"AQAB\"}")]
         public void Should_Encrypt_PlainText_With_PublicKey(string publicKeyJson)
         {
-            var rsaCrypto = new RsaCrypto();
+            var rsaCrypto = new RsaBcCrypto();
 
             var encrypted = rsaCrypto.Encrypt(_plainText, publicKeyJson);
 
@@ -59,7 +59,7 @@ namespace Sandbox.Crypto.Tests
             "{\"D\":\"P0EPXbh5vJ4brcTGuIXFjGy9oxnWr5Hf5tVD0Ss/8d4+f3EgKvfFzu3u067AnHe5as2NXoF7B6bpr5UQDMUQkTXkSvFq2nboHCSRFjhWz/3KFPn/1rWVFRmnWlvLJ7w71jzCtn2PqtJyUbJFEEamdGW0k0BssFlr8b397by9ExV+5VXlduO8OzosLWYj3SYk3pFwZyXtlXm66Nar5M8IpZUw/6BVFwflyYqUKhABeAtmtv7MRP4U0CYDUF69Sxd5vCzJ62oF8WcULmlw2+GtS3a/wBQ/lXTZh4BoBafOykqNyqN5E2phTktjjZmjC8KaEzfvdODnna0XLaeVB8O/2Q==\",\"P\":\"4NqqvWWJ0qPkck38L0/MThYIAEt8TTz4W1eJJA/2qp6HYcWD4KeMQt18DWODB0GBUfwvz2btRTPJUB2j1AGrU81c6JaDySoGgArHF3lv5oYSL784Px2mqiRTXA5x/Bw/bvqfks5mJ7S8SO/my9bjtH91zvR9UDDKnr34+OVVSoc=\",\"Q\":\"vCu9tPrrbXqN72BJs0FdVrRbQ5KX2moISK9a+g1W2m5ZxnE9EHDv4HiGwyfDxhU8tTZ/Bloh5SxK9l+ux46ywDux7WUW73+xGGA1hd0hJyFJ2RQICv5mT9piIEu/+VnJzyI3c6yU3oiY3KQPkTO5GOx6dofYy2WwlM9Hzii5trs=\",\"DP\":\"HvJ5pW+gNHmSK5lIKErXV7f4ifHZvdeyZv/5RBleXcVL5M0GhZkJ2Poa5MzZb9o4LkyDWAxWg7vI7Vnm/nrsVbBiJTDyGnHKSz0wga6ZFCVHw4KR/z3ZfnlZb8YdMhHBOUkNRWta7AQYFgHOxidhV6pjUISd6reMa6TB65/EyWk=\",\"DQ\":\"CvcVj/VLQM7ydG+M++gkM0hBRTfGp5CkOPAXAhlC5Wmmy5yPrWSXZeJAICEyFFnqdrjdQBaCgSNKnv7GZZSYMAGKhcXtRzmOrVf15n4TT39uGTtEmLdoaODV9QHVBwfHbc2Vo6T769fT6I+a5KA5+gzVuhCCfp/HYXSOv6G56L8=\",\"InverseQ\":\"jVR5DS/wO0qEnxkMcjboLFA4WuMGkchzvPJOnE8jDtATTvLT554qCSoo+ait3WOjdHCDDILCEFWUpquFY/5NlSk4Yi9ECPIXTGdwBzURETU3Pi97DJ6eZY/0x6foyNm8GN75dhOCPcXcorvX9RxMtUT/j5mRfszfzsrLfjFx1Ww=\",\"Modulus\":\"pUcAviqTeZlTTevWP4fJziy5wdEHBBvWhyVxtIDG4BNv3DuFPKWEUxQVfbMBRy8HzZwulUoNxRuXeEgDcrZXzKADRkywklazN4KN0UTINurP37UXqnvdPllVBTzI+2acrMg4iVd97pa918BhWvpfmuAatcSY8UNOB9FKpdJtC3GEegPhP4DQ0QD7JEN9OrviCXebPcdJbgsI7zUqNs7kXXf0RWIMgP1HgI42Wbcmlc6ce41zv7xouBaY0bsuJfZOiR1E0+aCJ34L+JFbZahGZKuoYcugIIvFo5rXhIJ48UiLWO2uThttX4gTZmmfQVYXB3xvLWxXtc1U70jEG9hqnQ==\",\"Exponent\":\"AQAB\"}")]
         public void Should_Decrypt_CipherText_With_PrivateKey(string cipherText, string privateKeyJson)
         {
-            var rsaCrypto = new RsaCrypto();
+            var rsaCrypto = new RsaBcCrypto();
 
             var decrypted = rsaCrypto.Decrypt(cipherText, privateKeyJson);
 
@@ -74,7 +74,7 @@ namespace Sandbox.Crypto.Tests
         [InlineData("{\"D\":\"P0EPXbh5vJ4brcTGuIXFjGy9oxnWr5Hf5tVD0Ss/8d4+f3EgKvfFzu3u067AnHe5as2NXoF7B6bpr5UQDMUQkTXkSvFq2nboHCSRFjhWz/3KFPn/1rWVFRmnWlvLJ7w71jzCtn2PqtJyUbJFEEamdGW0k0BssFlr8b397by9ExV+5VXlduO8OzosLWYj3SYk3pFwZyXtlXm66Nar5M8IpZUw/6BVFwflyYqUKhABeAtmtv7MRP4U0CYDUF69Sxd5vCzJ62oF8WcULmlw2+GtS3a/wBQ/lXTZh4BoBafOykqNyqN5E2phTktjjZmjC8KaEzfvdODnna0XLaeVB8O/2Q==\",\"P\":\"4NqqvWWJ0qPkck38L0/MThYIAEt8TTz4W1eJJA/2qp6HYcWD4KeMQt18DWODB0GBUfwvz2btRTPJUB2j1AGrU81c6JaDySoGgArHF3lv5oYSL784Px2mqiRTXA5x/Bw/bvqfks5mJ7S8SO/my9bjtH91zvR9UDDKnr34+OVVSoc=\",\"Q\":\"vCu9tPrrbXqN72BJs0FdVrRbQ5KX2moISK9a+g1W2m5ZxnE9EHDv4HiGwyfDxhU8tTZ/Bloh5SxK9l+ux46ywDux7WUW73+xGGA1hd0hJyFJ2RQICv5mT9piIEu/+VnJzyI3c6yU3oiY3KQPkTO5GOx6dofYy2WwlM9Hzii5trs=\",\"DP\":\"HvJ5pW+gNHmSK5lIKErXV7f4ifHZvdeyZv/5RBleXcVL5M0GhZkJ2Poa5MzZb9o4LkyDWAxWg7vI7Vnm/nrsVbBiJTDyGnHKSz0wga6ZFCVHw4KR/z3ZfnlZb8YdMhHBOUkNRWta7AQYFgHOxidhV6pjUISd6reMa6TB65/EyWk=\",\"DQ\":\"CvcVj/VLQM7ydG+M++gkM0hBRTfGp5CkOPAXAhlC5Wmmy5yPrWSXZeJAICEyFFnqdrjdQBaCgSNKnv7GZZSYMAGKhcXtRzmOrVf15n4TT39uGTtEmLdoaODV9QHVBwfHbc2Vo6T769fT6I+a5KA5+gzVuhCCfp/HYXSOv6G56L8=\",\"InverseQ\":\"jVR5DS/wO0qEnxkMcjboLFA4WuMGkchzvPJOnE8jDtATTvLT554qCSoo+ait3WOjdHCDDILCEFWUpquFY/5NlSk4Yi9ECPIXTGdwBzURETU3Pi97DJ6eZY/0x6foyNm8GN75dhOCPcXcorvX9RxMtUT/j5mRfszfzsrLfjFx1Ww=\",\"Modulus\":\"pUcAviqTeZlTTevWP4fJziy5wdEHBBvWhyVxtIDG4BNv3DuFPKWEUxQVfbMBRy8HzZwulUoNxRuXeEgDcrZXzKADRkywklazN4KN0UTINurP37UXqnvdPllVBTzI+2acrMg4iVd97pa918BhWvpfmuAatcSY8UNOB9FKpdJtC3GEegPhP4DQ0QD7JEN9OrviCXebPcdJbgsI7zUqNs7kXXf0RWIMgP1HgI42Wbcmlc6ce41zv7xouBaY0bsuJfZOiR1E0+aCJ34L+JFbZahGZKuoYcugIIvFo5rXhIJ48UiLWO2uThttX4gTZmmfQVYXB3xvLWxXtc1U70jEG9hqnQ==\",\"Exponent\":\"AQAB\"}")]
         public void Should_SignData_With_PrivateKey(string privateKeyJson)
         {
-            var rsaCrypto = new RsaCrypto();
+            var rsaCrypto = new RsaBcCrypto();
 
             var signature = rsaCrypto.SignData(_plainText, privateKeyJson);
 
@@ -91,7 +91,7 @@ namespace Sandbox.Crypto.Tests
             "{\"Modulus\":\"pUcAviqTeZlTTevWP4fJziy5wdEHBBvWhyVxtIDG4BNv3DuFPKWEUxQVfbMBRy8HzZwulUoNxRuXeEgDcrZXzKADRkywklazN4KN0UTINurP37UXqnvdPllVBTzI+2acrMg4iVd97pa918BhWvpfmuAatcSY8UNOB9FKpdJtC3GEegPhP4DQ0QD7JEN9OrviCXebPcdJbgsI7zUqNs7kXXf0RWIMgP1HgI42Wbcmlc6ce41zv7xouBaY0bsuJfZOiR1E0+aCJ34L+JFbZahGZKuoYcugIIvFo5rXhIJ48UiLWO2uThttX4gTZmmfQVYXB3xvLWxXtc1U70jEG9hqnQ==\",\"Exponent\":\"AQAB\"}")]
         public void Should_VerifySignautre_With_PublicKey(string signature, string publicKeyJson)
         {
-            var rsaCrypto = new RsaCrypto();
+            var rsaCrypto = new RsaBcCrypto();
 
             var verified = rsaCrypto.VerifySignature(_plainText, signature, publicKeyJson);
 

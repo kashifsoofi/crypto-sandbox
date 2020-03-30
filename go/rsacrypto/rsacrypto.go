@@ -12,21 +12,7 @@ import (
 	"math/big"
 )
 
-type CipherMode int
-
-const (
-	ECB CipherMode = iota
-)
-
-type Padding int
-
-const (
-	SHA512WITHRSA Padding = iota
-)
-
 type RsaCrypto struct {
-	CipherMode CipherMode
-	Padding Padding
 }
 
 type RsaPrivateKey rsa.PrivateKey
@@ -43,24 +29,56 @@ type RsaPrivateKeyParameters struct {
 	Exponent []byte
 }
 
-func (privateKey *RsaPrivateKey) toRsaPrivateKeyParameters() (*RsaPrivateKeyParameters) {
-	return &RsaPrivateKeyParameters {
-		D: privateKey.D.Bytes(),
-		// TODO: P: privateKey.P,
-		// TODO: DP: privateKey.DP,
+func (privateKey *RsaPrivateKey) toRsaPrivateKeyParameters() (*RsaPrivateKeyParameters, error) {
+	exponent := new(bytes.Buffer)
+	err := binary.Write(exponent, binary.LittleEndian, uint32(privateKey.PublicKey.E))
+	if err != nil {
+    	return nil, err
 	}
+
+	return &RsaPrivateKeyParameters {
+		D: privateKey.D.Bytes(),		
+		P: privateKey.Primes[0].Bytes(),
+		Q: privateKey.Primes[1].Bytes(),
+		DP: privateKey.Precomputed.Dp.Bytes(),
+		DQ: privateKey.Precomputed.Dq.Bytes(),
+		InverseQ: privateKey.Precomputed.Qinv.Bytes(),
+		Modulus: privateKey.PublicKey.N.Bytes(),
+		Exponent: exponent.Bytes(),
+	}, nil
 }
 
-func (keyParameters RsaPrivateKeyParameters) toRsaPrivateKey() *rsa.PrivateKey {
-	modulus := new(big.Int)
+func (keyParameters RsaPrivateKeyParameters) toRsaPrivateKey() (*rsa.PrivateKey, error) {
+	d, p, q := new(big.Int), new(big.Int), new(big.Int)
+	d.SetBytes(keyParameters.D)
+	p.SetBytes(keyParameters.P)
+	q.SetBytes(keyParameters.Q)
+	dp, dq, inverseQ, modulus := new(big.Int), new(big.Int), new(big.Int), new(big.Int)
+	dp.SetBytes(keyParameters.DP)
+	dq.SetBytes(keyParameters.DQ)
+	inverseQ.SetBytes(keyParameters.InverseQ)
 	modulus.SetBytes(keyParameters.Modulus)
-	var exponent int
+
+	var exponent uint32
 	buf := bytes.NewReader(keyParameters.Exponent)
-	_ = binary.Read(buf, binary.LittleEndian, &exponent)
+	err := binary.Read(buf, binary.LittleEndian, &exponent)
+	if err != nil {
+		return nil, err
+	}
 
 	return &rsa.PrivateKey {
-		// TODO: set values
-	}
+		PublicKey: rsa.PublicKey {
+			N: modulus,
+			E: int(exponent),
+		},
+		D: d,
+		Primes: []*big.Int { p, q },
+		Precomputed: rsa.PrecomputedValues {
+			Dp: dp,
+			Dq: dq,
+			Qinv: inverseQ,
+		},
+	}, nil
 }
 
 func (keyParameters RsaPrivateKeyParameters) toJson() string {
@@ -75,7 +93,7 @@ type RsaPublicKeyParameters struct {
 
 func (publicKey *RsaPublicKey) toRsaPublicKeyParameters() (*RsaPublicKeyParameters, error) {
 	exponent := new(bytes.Buffer)
-	err := binary.Write(exponent, binary.LittleEndian, publicKey.E)
+	err := binary.Write(exponent, binary.LittleEndian, uint32(publicKey.E))
 	if err != nil {
     	return nil, err
 	}
@@ -86,17 +104,21 @@ func (publicKey *RsaPublicKey) toRsaPublicKeyParameters() (*RsaPublicKeyParamete
 	}, nil
 }
 
-func (keyParameters RsaPublicKeyParameters) toRsaPublicKey() *rsa.PublicKey {
+func (keyParameters RsaPublicKeyParameters) toRsaPublicKey() (*rsa.PublicKey, error) {
 	modulus := new(big.Int)
 	modulus.SetBytes(keyParameters.Modulus)
-	var exponent int
+
+	var exponent uint32
 	buf := bytes.NewReader(keyParameters.Exponent)
-	_ = binary.Read(buf, binary.LittleEndian, &exponent)
+	err := binary.Read(buf, binary.LittleEndian, &exponent)
+	if err != nil {
+		return nil, err
+	}
 
 	return &rsa.PublicKey {
 		N: modulus,
-		E: exponent,
-	}
+		E: int(exponent),
+	}, nil
 }
 
 func (keyParameters RsaPublicKeyParameters) toJson() string {
@@ -111,7 +133,7 @@ func (crypto RsaCrypto) GenerateKeyPair(keySize int) (string, string, error) {
 	}
 		
 	var rsaPrivateKey RsaPrivateKey = RsaPrivateKey(*privateKey)
-	rsaPrivateKeyParameters := rsaPrivateKey.toRsaPrivateKeyParameters()
+	rsaPrivateKeyParameters, err := rsaPrivateKey.toRsaPrivateKeyParameters()
 	if err != nil {
 		return "", "", err
 	}
@@ -130,7 +152,10 @@ func (crypto RsaCrypto) Encrypt(plainText string, publicKeyJson string) (string,
 	var rsaPublicKeyParameters RsaPublicKeyParameters
 	jsonBytes := []byte(publicKeyJson)
 	err := json.Unmarshal(jsonBytes, &rsaPublicKeyParameters)
-	publicKey := rsaPublicKeyParameters.toRsaPublicKey()
+	publicKey, err := rsaPublicKeyParameters.toRsaPublicKey()
+	if err != nil {
+		return "", err
+	}
 
 	hash := sha512.New()
 	plainTextBytes := []byte(plainText)
@@ -151,7 +176,10 @@ func (crypto RsaCrypto) Decrypt(cipherText string, privateKeyJson string, provid
 	var rsaPrivateKeyParameters RsaPrivateKeyParameters
 	jsonBytes := []byte(privateKeyJson)
 	err = json.Unmarshal(jsonBytes, &rsaPrivateKeyParameters)
-	privateKey := rsaPrivateKeyParameters.toRsaPrivateKey()
+	privateKey, err := rsaPrivateKeyParameters.toRsaPrivateKey()
+	if err != nil {
+		return "", err
+	}
 	
 	hash := sha512.New()
 	plainText, err := rsa.DecryptOAEP(hash, rand.Reader, privateKey, data, nil)

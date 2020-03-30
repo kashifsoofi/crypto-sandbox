@@ -2,7 +2,6 @@ package rsacrypto
 
 import (
 	"testing"
-	// "fmt"
 )
 
 const plainText = "Here is some data to encrypt!"
@@ -27,28 +26,17 @@ func TestEncryptAndDecryptWithGeneratedKey(t *testing.T) {
 		return
 	}
 
-	// fmt.Printf("PrivateKeyJson: %s", privateKeyJson)
-	// fmt.Println()
-	// fmt.Printf("PublicKeyJson: %s", publicKeyJson)
-	// fmt.Println()
-
 	encrypted, err := rsaCrypto.Encrypt(plainText, publicKeyJson)
 	if err != nil {
 		t.Errorf("%s", err);
 		return
 	}
 
-	// fmt.Printf("Encrypted: %s", encrypted)
-	// fmt.Println()
-
 	decrypted, err := rsaCrypto.Decrypt(encrypted, privateKeyJson, "go")
 	if err != nil {
 		t.Errorf("%s", err);
 		return
 	}
-
-	// fmt.Printf("Decrypted: %s", decrypted)
-	// fmt.Println()
 
 	if decrypted != plainText {
 		t.Errorf("Decrypt error, got: %s, want: %s", decrypted, plainText)

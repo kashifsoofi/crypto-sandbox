@@ -1,5 +1,5 @@
 # How to run tests
-Download [junit-4.12](https://github.com/junit-team/junit4/releases/download/r4.12/junit-4.12.jar) and [hamcrest-core-1.3](http://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar)  
+Download [gson-2.8.6](https://search.maven.org/remotecontent?filepath=com/google/code/gson/gson/2.8.6/gson-2.8.6.jar), [junit-4.12](https://github.com/junit-team/junit4/releases/download/r4.12/junit-4.12.jar) and [hamcrest-core-1.3](http://search.maven.org/remotecontent?filepath=org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar)  
 1. Compile class  
 `javac -cp .:gson-2.8.6.jar RsaCrypto.java`  
 2. Compile test class. On Linux or MacOS  

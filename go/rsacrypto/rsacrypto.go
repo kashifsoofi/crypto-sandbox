@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"crypto/rand"
     "crypto/rsa"
-	"crypto/sha512"
+	"crypto/sha256"
     base64 "encoding/base64"
 	"encoding/binary"
 	"encoding/json"
@@ -29,11 +29,14 @@ type RsaPrivateKeyParameters struct {
 	Exponent []byte
 }
 
-func (privateKey *RsaPrivateKey) toRsaPrivateKeyParameters() (*RsaPrivateKeyParameters, error) {
-	exponent := new(bytes.Buffer)
-	err := binary.Write(exponent, binary.LittleEndian, uint32(privateKey.PublicKey.E))
-	if err != nil {
-    	return nil, err
+func (privateKey *RsaPrivateKey) toRsaPrivateKeyParameters() *RsaPrivateKeyParameters {
+	exponent := make([]byte, 4)
+	binary.BigEndian.PutUint32(exponent, uint32(privateKey.PublicKey.E))
+	for i := range exponent {
+	  if exponent[i] != 0 {
+		  exponent = exponent[i:]
+		  break
+	   }
 	}
 
 	return &RsaPrivateKeyParameters {
@@ -44,8 +47,8 @@ func (privateKey *RsaPrivateKey) toRsaPrivateKeyParameters() (*RsaPrivateKeyPara
 		DQ: privateKey.Precomputed.Dq.Bytes(),
 		InverseQ: privateKey.Precomputed.Qinv.Bytes(),
 		Modulus: privateKey.PublicKey.N.Bytes(),
-		Exponent: exponent.Bytes(),
-	}, nil
+		Exponent: exponent,
+	}
 }
 
 func (keyParameters RsaPrivateKeyParameters) toRsaPrivateKey() (*rsa.PrivateKey, error) {
@@ -59,17 +62,14 @@ func (keyParameters RsaPrivateKeyParameters) toRsaPrivateKey() (*rsa.PrivateKey,
 	inverseQ.SetBytes(keyParameters.InverseQ)
 	modulus.SetBytes(keyParameters.Modulus)
 
-	var exponent uint32
-	buf := bytes.NewReader(keyParameters.Exponent)
-	err := binary.Read(buf, binary.LittleEndian, &exponent)
-	if err != nil {
-		return nil, err
-	}
+	buffer := make([]byte, 4)
+	copy(buffer[4 - len(keyParameters.Exponent):], keyParameters.Exponent)
+	e := binary.BigEndian.Uint32(buffer)
 
 	return &rsa.PrivateKey {
 		PublicKey: rsa.PublicKey {
 			N: modulus,
-			E: int(exponent),
+			E: int(e),
 		},
 		D: d,
 		Primes: []*big.Int { p, q },
@@ -93,7 +93,7 @@ type RsaPublicKeyParameters struct {
 
 func (publicKey *RsaPublicKey) toRsaPublicKeyParameters() (*RsaPublicKeyParameters, error) {
 	exponent := new(bytes.Buffer)
-	err := binary.Write(exponent, binary.LittleEndian, uint32(publicKey.E))
+	err := binary.Write(exponent, binary.BigEndian, uint32(publicKey.E))
 	if err != nil {
     	return nil, err
 	}
@@ -110,7 +110,7 @@ func (keyParameters RsaPublicKeyParameters) toRsaPublicKey() (*rsa.PublicKey, er
 
 	var exponent uint32
 	buf := bytes.NewReader(keyParameters.Exponent)
-	err := binary.Read(buf, binary.LittleEndian, &exponent)
+	err := binary.Read(buf, binary.BigEndian, &exponent)
 	if err != nil {
 		return nil, err
 	}
@@ -133,10 +133,7 @@ func (crypto RsaCrypto) GenerateKeyPair(keySize int) (string, string, error) {
 	}
 		
 	var rsaPrivateKey RsaPrivateKey = RsaPrivateKey(*privateKey)
-	rsaPrivateKeyParameters, err := rsaPrivateKey.toRsaPrivateKeyParameters()
-	if err != nil {
-		return "", "", err
-	}
+	rsaPrivateKeyParameters := rsaPrivateKey.toRsaPrivateKeyParameters()
 
 	var rsaPublicKey RsaPublicKey = RsaPublicKey(privateKey.PublicKey)
 	rsaPublicKeyParameters, err := rsaPublicKey.toRsaPublicKeyParameters()
@@ -157,7 +154,7 @@ func (crypto RsaCrypto) Encrypt(plainText string, publicKeyJson string) (string,
 		return "", err
 	}
 
-	hash := sha512.New()
+	hash := sha256.New()
 	plainTextBytes := []byte(plainText)
 	ciphertext, err := rsa.EncryptOAEP(hash, rand.Reader, publicKey, plainTextBytes, nil)
 	if err != nil {
@@ -181,7 +178,7 @@ func (crypto RsaCrypto) Decrypt(cipherText string, privateKeyJson string, provid
 		return "", err
 	}
 	
-	hash := sha512.New()
+	hash := sha256.New()
 	plainText, err := rsa.DecryptOAEP(hash, rand.Reader, privateKey, data, nil)
 	if err != nil {
 		return "", err

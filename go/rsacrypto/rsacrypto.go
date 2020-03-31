@@ -132,7 +132,7 @@ func (crypto RsaCrypto) GenerateKeyPair(keySize int) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-		
+
 	var rsaPrivateKey RsaPrivateKey = RsaPrivateKey(*privateKey)
 	rsaPrivateKeyParameters := rsaPrivateKey.toRsaPrivateKeyParameters()
 
@@ -216,12 +216,12 @@ func (rsaCrypto RsaCrypto) VerifySignature(data string, signature string, public
 	}
 
 	dataToVerify := []byte(data)
-	hashed := sha256.Sum256(dataToVerify)
+	hashed := sha512.Sum512(dataToVerify)
 	binarySignature, _ := base64.StdEncoding.DecodeString(signature)
 
 	verifyErr := rsa.VerifyPKCS1v15(signatureKey, crypto.SHA512, hashed[:], binarySignature)
 	if verifyErr != nil {
-		return false, err
+		return false, verifyErr
 	}
 
 	return true, nil

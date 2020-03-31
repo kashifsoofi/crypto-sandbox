@@ -92,6 +92,9 @@ namespace Sandbox.Crypto.Tests
         // Signed with BouncyCastle RSA Public Key
         [InlineData("oqChJWK+pHY/iAMrK1qBBfD/u8uhZa+RkvfdD01kppRmunlsdO6LWrjOhsqQfLp770mAbSwLdwA5upf5/Gww1QsDmjTBN4Kd/Cs4BHw/eKO6aC2qpaEMvXrI+Ehw/YxMM9RZu9Wv1f8FKg1po4tLhPiStACE3Eg7EFEEDRAA31jbxaE2K4FbbaOtpfmpKkoEWgmyWvXgrVqHaorJ9unYDDoJ7sLvKIRhsE7PDkNxwoI2qGk4bXp+oRIUSJkKGLXLkyjRhZQknQciZZx1zBxLM0VChq8OqvcOVqMB+A2k3xEUW38ZiEqngEah++yC/Q/mssVr2DdlC8JZvfyqoU+mIA==",
             "{\"Modulus\":\"pUcAviqTeZlTTevWP4fJziy5wdEHBBvWhyVxtIDG4BNv3DuFPKWEUxQVfbMBRy8HzZwulUoNxRuXeEgDcrZXzKADRkywklazN4KN0UTINurP37UXqnvdPllVBTzI+2acrMg4iVd97pa918BhWvpfmuAatcSY8UNOB9FKpdJtC3GEegPhP4DQ0QD7JEN9OrviCXebPcdJbgsI7zUqNs7kXXf0RWIMgP1HgI42Wbcmlc6ce41zv7xouBaY0bsuJfZOiR1E0+aCJ34L+JFbZahGZKuoYcugIIvFo5rXhIJ48UiLWO2uThttX4gTZmmfQVYXB3xvLWxXtc1U70jEG9hqnQ==\",\"Exponent\":\"AQAB\"}")]
+        // Signed with Golang RSA Public Key
+        [InlineData("frv/O3f2iOyD3M+ocVfqWl++jjPVL2p2fFozW+NNeX49F0gESMi/B8AkX7QSKBK99q4iE8ID/wmdKQ10eUQtheXKffC/wRzEeHaMY88OwE1HHgNG4pVdKi7G7lid7/1KwOh3mOx4+Ngr9VWIL5nNoCBnwmK+RRu7av0e/S96Qx2/4zmZyljcQyU9HhnV/A7uKWuUFmElag9D/T53xboy2s5gCwLB/zkY/ssAPL29R204oHD7TCzl3jT7Ev/KL0NVVBTZEBpJ1sq6TKAXkgS5Qgxsbwx7LA57dTUXKCFHt+uR1/x7bATuqkNOcW+tsvjKvJetLl4Lw5fYhWUUBwe3PA==",
+            "{\"Modulus\":\"owOIiWqdndwAVxHBKF3CyvLIrjBQLFKeV3JwSJsyPgx/ttA7TBgtDfQCTLYyjR2mqfZWEQWuirTikcmdTTZKBYwvE+waJOyehMt1bxccEkvvM7qa+YRwwwcrpAh+k5x3pvJj7xVW80SiULVq0T/L32fio+P9440jEOcdqPbW7DR8lFhRazyMwRo9Gf3CdZQJoVT31QfqqRWjjMSXKQ4PJQEI5M7bO5uEMzSvSpeIPEvazt5Ti2ttk8uZ9PKl227Z0SjN9b99q2Hco+GWztuQdQsQheilgJoWJv84ZuTcUrf82D+epgU9k17NM2nE9N8wd145pSkHvx8HhxUcqxkp7w==\",\"Exponent\":\"AQAB\"}")]
         public void Should_VerifySignautre_With_PublicKey(string signature, string publicKeyJson)
         {
             var rsaCrypto = new RsaBcCrypto();

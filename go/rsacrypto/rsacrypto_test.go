@@ -80,3 +80,80 @@ func TestDecryptWithPrivateKey(t *testing.T) {
 		}
 	}
 }
+
+func TestSignDataAndVerifySignatureWithGeneratedKey(t *testing.T) {
+	rsaCrypto := RsaCrypto { }
+	privateKeyJson, publicKeyJson, err := rsaCrypto.GenerateKeyPair(2048)
+	if err != nil {
+		t.Errorf("%s", err)
+		return
+	}
+
+	signature, err := rsaCrypto.SignData(plainText, privateKeyJson)
+	if err != nil {
+		t.Errorf("%s", err)
+		return
+	}
+
+	verified, err := rsaCrypto.VerifySignature(plainText, signature, publicKeyJson)
+	if err != nil {
+		t.Errorf("%s", err)
+		return
+	}
+
+	if verified == false {
+		t.Errorf("Signature verification failed")
+	}
+}
+
+func TestSignDataWithPrivateKey(t *testing.T) {
+	rsaCrypto := RsaCrypto { }
+	privateKeyJson := "{\"D\":\"m+rZQXZ0Y3T17lHRCqcDldI6GEGlrX8obEPNGeU3XRnfXiA1V0cYcOwe9vidyVO/AXnYQFfK5mi0/PR2PE/c5Ql8TfXZ289mn2VrYWIdO3LdzACEEnyWzjOhjjeBufZCi6/z3c3vaKcRCVk8XgBDI9/daxy6zldEXvpv6BiQ4UKbyCenuZJCSZiX8uasVbXd0qAGWod4Tztb/zvT90SkkcYfElapB9mUiFDfRezl9ZbGBAlPRAkVtt+5Sl8/NZGL/2K8hcRmTywt7VeBXmhdWsiFmj+lpyMx/pGWyBncRaH5ads5yq8G2GmSnH4a7p5LRp/O9WzLxEjnMogQ24YtAQ==\",\"P\":\"yluJKli0Ju6yAjDjYTCmhOCA6KfQ4M1PVv8xaaIKArVOXBhP8s8E8fjRPysrYKQ0cPh98WZX61a4BJ5wVScdc+E/yVbPoLN2QsIZersyQre3iUER+N93826nkuz/3FkTbIXr6SQmXLYv0gfcW0Xs0IJbzUYWtU30jPHXM8FqTaE=\",\"Q\":\"zjoJZAAU2r0Tt9mCBKBy62PFf/+QpUzJqtmBQrgBNPCDDWhRHvWiwZgu9/5PE8S8CC+r262xJKJN4rI7o8C2vWEjusv81WPsVOwAigamoCQvkkz3//8cQAT9/UqEjRpnSqp9QK5yre5RdDHGALS1Vg3DGVCImwByCEARxc8CrY8=\",\"DP\":\"OTfGwi2Qyw1lUg9Gy/14qEvex2pkOpxzGbNQ4oCJ+hgQDyRkvtBgopbre8QWIN5tYaAx5Gc+5vF/WPb/5mQIBPMlGSYt0U/NWbUOhVCXNpxCDlJS5Z8yiKe6RGY1NrYNMvtvKF4rZr2xKd9FJJ3SB2dE0/dEhoGDa7MaWa0QBOE=\",\"DQ\":\"ry2RiIahMGXoeAWlcjSxKc7ol6AJyMB/lkeIi5ouPEAJsrvoHLpfdL/HNhWqKoq1huanv8W9cfcE3gq0qpcrI5d+eFCLBuEIgeKvWo/nvqS+XDJRf/2+i4syDZTdH9dL4psMJoOJGsIUIvWc0kCuwNiT388PG0u3kdaKwlLkXXU=\",\"InverseQ\":\"uw+UQ9jz3o0b37+4YjiF4G8SOcuJyZAA9iGppbltUzyk//4RDmkjolcIVjIh6rOeXeM0IY+Y1ICqIOafoiO1T+QwJJEfCGzkRs4AD6zbjhLBLJOMVVemtk3y+eD4wVVFc66JT+9V4CmxZWTe+CvrUXEOFGeNXu+qgS8C90xCaWI=\",\"Modulus\":\"owOIiWqdndwAVxHBKF3CyvLIrjBQLFKeV3JwSJsyPgx/ttA7TBgtDfQCTLYyjR2mqfZWEQWuirTikcmdTTZKBYwvE+waJOyehMt1bxccEkvvM7qa+YRwwwcrpAh+k5x3pvJj7xVW80SiULVq0T/L32fio+P9440jEOcdqPbW7DR8lFhRazyMwRo9Gf3CdZQJoVT31QfqqRWjjMSXKQ4PJQEI5M7bO5uEMzSvSpeIPEvazt5Ti2ttk8uZ9PKl227Z0SjN9b99q2Hco+GWztuQdQsQheilgJoWJv84ZuTcUrf82D+epgU9k17NM2nE9N8wd145pSkHvx8HhxUcqxkp7w==\",\"Exponent\":\"AQAB\"}"
+	signature, err := rsaCrypto.SignData(plainText, privateKeyJson)
+	if err != nil {
+		t.Errorf("%s", err)
+		return
+	}
+
+	if signature == "" {
+		t.Errorf("SignData failed")
+	}
+}
+
+func TestVerifySignautreWithPublicKey(t *testing.T) {
+	var testData = []struct {
+		Signature string
+		PublicKeyJson string
+		Provider string
+	} {
+		{
+			"UbGDuwPp3WmJkzUvnlYckI5yYFg2J3QI6/jymO823j860Z0eNpnUHMTz5QF/qwvV3iafNkFoJuaNznmelW3up32jSJUzm8NfUR3YDrSUqtLjzhKMV6iaoNmfAZChQQRYteid82omBXLemApVmuxANcK4ESnQVKNF/lw3u7UGsvY4TkfFLeVWZoZ6vHeLgxixQAEO38uBNzM0qFlORKI8bwBedzRZg62txEeYWB4U7ZnPo6HIpbGpym1qlJZ2SIDYC/g2CJNMvNW40Jk5CGv7R25yEohKo/RRHu6wgn4X/629E9XZLH/8y+gAJiJRvhBgceKMPA3IMirpfxE0NhdUAA==",
+			"{\"Modulus\":\"vSPpZZ4r5zhM3rlaS75i33l6wgQjk9YR1y/QV6+r2NoJS8I17dLZrqk6ivSCgOkRT08/wNUvAUO6vuvaSKo5mG9AalzwVA1EM5FOaaWxYqs3mSnIqft1leL8Q/DHx1A4RFW/SVq+3n8WXV0w+NW4p33yH3eLKD6O3aeCBj9kgkOammeu5uYqcPpu/UQd4tcTEuwE6d1Mcyf6VeBK4J9DMDAcrY43mWc4s/3Vh4AJQXs/iEtqxxlpk8Zv0BNoucomkbw8ZsvdGW+FcnCmcCvBsWBZhI/PZflQGr7FNcsL2LHGQxeIZ1epNzCeTcyVcjZjnNuBcGBL1kymOwOyGN5NPQ==\",\"Exponent\":\"AQAB\"}",
+			"Microsoft RSA/OaepSHA256",
+		},
+		{
+			"oqChJWK+pHY/iAMrK1qBBfD/u8uhZa+RkvfdD01kppRmunlsdO6LWrjOhsqQfLp770mAbSwLdwA5upf5/Gww1QsDmjTBN4Kd/Cs4BHw/eKO6aC2qpaEMvXrI+Ehw/YxMM9RZu9Wv1f8FKg1po4tLhPiStACE3Eg7EFEEDRAA31jbxaE2K4FbbaOtpfmpKkoEWgmyWvXgrVqHaorJ9unYDDoJ7sLvKIRhsE7PDkNxwoI2qGk4bXp+oRIUSJkKGLXLkyjRhZQknQciZZx1zBxLM0VChq8OqvcOVqMB+A2k3xEUW38ZiEqngEah++yC/Q/mssVr2DdlC8JZvfyqoU+mIA==",
+			"{\"Modulus\":\"pUcAviqTeZlTTevWP4fJziy5wdEHBBvWhyVxtIDG4BNv3DuFPKWEUxQVfbMBRy8HzZwulUoNxRuXeEgDcrZXzKADRkywklazN4KN0UTINurP37UXqnvdPllVBTzI+2acrMg4iVd97pa918BhWvpfmuAatcSY8UNOB9FKpdJtC3GEegPhP4DQ0QD7JEN9OrviCXebPcdJbgsI7zUqNs7kXXf0RWIMgP1HgI42Wbcmlc6ce41zv7xouBaY0bsuJfZOiR1E0+aCJ34L+JFbZahGZKuoYcugIIvFo5rXhIJ48UiLWO2uThttX4gTZmmfQVYXB3xvLWxXtc1U70jEG9hqnQ==\",\"Exponent\":\"AQAB\"}",
+			"BouncyCastle RSA/ECB/OAEPWithSHA256AndMGF1Padding",
+		},
+		{
+			"frv/O3f2iOyD3M+ocVfqWl++jjPVL2p2fFozW+NNeX49F0gESMi/B8AkX7QSKBK99q4iE8ID/wmdKQ10eUQtheXKffC/wRzEeHaMY88OwE1HHgNG4pVdKi7G7lid7/1KwOh3mOx4+Ngr9VWIL5nNoCBnwmK+RRu7av0e/S96Qx2/4zmZyljcQyU9HhnV/A7uKWuUFmElag9D/T53xboy2s5gCwLB/zkY/ssAPL29R204oHD7TCzl3jT7Ev/KL0NVVBTZEBpJ1sq6TKAXkgS5Qgxsbwx7LA57dTUXKCFHt+uR1/x7bATuqkNOcW+tsvjKvJetLl4Lw5fYhWUUBwe3PA==",
+			"{\"Modulus\":\"owOIiWqdndwAVxHBKF3CyvLIrjBQLFKeV3JwSJsyPgx/ttA7TBgtDfQCTLYyjR2mqfZWEQWuirTikcmdTTZKBYwvE+waJOyehMt1bxccEkvvM7qa+YRwwwcrpAh+k5x3pvJj7xVW80SiULVq0T/L32fio+P9440jEOcdqPbW7DR8lFhRazyMwRo9Gf3CdZQJoVT31QfqqRWjjMSXKQ4PJQEI5M7bO5uEMzSvSpeIPEvazt5Ti2ttk8uZ9PKl227Z0SjN9b99q2Hco+GWztuQdQsQheilgJoWJv84ZuTcUrf82D+epgU9k17NM2nE9N8wd145pSkHvx8HhxUcqxkp7w==\",\"Exponent\":\"AQAB\"}",
+			"go",
+		},
+	}
+
+	rsaCrypto := RsaCrypto { }
+
+	for _, testData := range testData {
+		verified, err := rsaCrypto.VerifySignature(plainText, testData.Signature, testData.PublicKeyJson)
+		if err != nil {
+			t.Errorf("%s", err);
+			continue
+		}
+	
+		if verified == false {
+			t.Errorf("Signature verification failed for %s", testData.Provider)
+		}
+	}
+}

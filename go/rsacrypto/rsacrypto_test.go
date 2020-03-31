@@ -80,3 +80,29 @@ func TestDecryptWithPrivateKey(t *testing.T) {
 		}
 	}
 }
+
+func TestSignDataAndVerifySignatureWithGeneratedKey(t *testing.T) {
+	rsaCrypto := RsaCrypto { }
+	privateKeyJson, publicKeyJson, err := rsaCrypto.GenerateKeyPair(2048)
+	if err != nil {
+		t.Errorf("%s", err)
+		return
+	}
+
+	signature, err := rsaCrypto.SignData(plainText, privateKeyJson)
+	if err != nil {
+		t.Errorf("%s", err)
+		return
+	}
+
+	verified, err := rsaCrypto.VerifySignature(plainText, signature, publicKeyJson)
+	if err != nil {
+		t.Errorf("%s", err)
+		return
+	}
+
+	if verified != false {
+		t.Errorf("Signature verification failed")
+	}
+}
+

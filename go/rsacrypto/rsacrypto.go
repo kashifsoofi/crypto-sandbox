@@ -4,9 +4,9 @@ package rsacrypto
 import (
 	"bytes"
 	"crypto/rand"
-    "crypto/rsa"
+	"crypto/rsa"
 	"crypto/sha256"
-    base64 "encoding/base64"
+	base64 "encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"math/big"
